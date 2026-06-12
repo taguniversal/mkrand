@@ -4,6 +4,8 @@ MKRAND is a deterministic bit generator built around the repeated application of
 
 Unlike conventional random number generators that rely on entropy sources, MKRAND generates complexity from a simple deterministic state transition rule.
 
+![MKRAND Architecture](cover.png)
+
 ### Seed
 
 The system begins with a 128-bit seed.

@@ -6,6 +6,10 @@ Unlike conventional random number generators that rely on entropy sources, MKRAN
 
 ![MKRAND Architecture](cover.png)
 
+Read the Digital Blockchain documentation here:
+
+https://github.com/taguniversal/digital_blockchain_patents
+
 ### Seed
 
 The system begins with a 128-bit seed.
@@ -281,7 +285,7 @@ zig build run -- -n 10 -s 0x10000000000000000
 | Option           | Description                          |
 | ---------------- | ------------------------------------ |
 | `-n`, `--blocks` | Number of 128-bit blocks to generate |
-| `-f`, `--format` | Output format (`hex` , `bin`, or 'psi')       |
+| `-f`, `--format` | Output format (`hex` , `bin`, or `psi`)       |
 | `-s`, `--seed`   | Initial 128-bit seed (hexadecimal)   |
 | `-h`, `--help`   | Display usage information            |
 
@@ -309,6 +313,79 @@ zig build run -- \
     --seed 0xdeadbeefcafebabe123456789abcdef0
 ```
 
+## Blockchain Continuation
+
+MKRAND produces a deterministic stream of 128-bit blocks.
+
+Any generated block can be used as the seed for a future invocation, allowing a sequence to be paused, transmitted, stored on a blockchain, and resumed later without loss of continuity.
+
+### Initial Generation
+
+```bash
+mkrand -n 5 -f psi
+```
+
+Output:
+
+```text
+[<:d9ca177b669ab95b6fef270657dff32c:>]
+[<:4aa0da9e7b0a5fd5985ab55c0f0192fe:>]
+[<:affef8aaa5f381d99f2c9a4205ed9e10:>]
+[<:7661d6c41a9bd75730fa5160e233f3de:>]
+[<:ca378cb8cd68321d91335094614b8fff:>]
+```
+
+Suppose the second block is stored in a blockchain transaction:
+
+```text
+[<:4aa0da9e7b0a5fd5985ab55c0f0192fe:>]
+```
+
+### Resuming the Sequence
+
+The stored PSI block can later be used as the seed:
+
+```bash
+mkrand -n 5 -s "[<:4aa0da9e7b0a5fd5985ab55c0f0192fe:>]"
+```
+
+Output:
+
+```text
+0xaffef8aaa5f381d99f2c9a4205ed9e10
+0x7661d6c41a9bd75730fa5160e233f3de
+0xca378cb8cd68321d91335094614b8fff
+0x9e6d4585fcc73f087aa104d2bab6dc1b
+0xb131ec698bdae1c88212280449c1a176
+```
+
+Notice that generation resumes exactly where the original sequence left off.
+
+### Deterministic Checkpoints
+
+Every generated block is both:
+
+* Output data
+* A valid future seed
+
+This allows any point in the sequence to act as a deterministic checkpoint that can be archived, transmitted, embedded in a document, or stored on-chain.
+
+### Seed Output
+
+When a seed is used, MKRAND writes the seed value to **stderr** rather than **stdout**:
+
+```text
+seed: 0x4aa0da9e7b0a5fd5985ab55c0f0192fe
+```
+
+This ensures that redirected output files contain only generated data:
+
+```bash
+mkrand -n 1000 > blocks.txt
+```
+
+The seed remains visible to the user on the console while the output file receives only the generated blocks.
+
 ---
 
 ## Development
@@ -326,6 +403,7 @@ zig fmt .
 ```
 
 ---
+
 
 ## Algorithm Overview
 

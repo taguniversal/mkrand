@@ -167,3 +167,185 @@ MKRAND is designed around several core principles:
 - Cellular automata as the source of complexity
 
 The implementation focuses on treating randomness as an emergent property of deterministic state evolution rather than as a direct product of physical entropy collection.
+
+# Building MKRAND
+
+MKRAND is written in Zig and builds as a single native executable on Linux, macOS, and Windows.
+
+---
+
+## Prerequisites
+
+Install Zig 0.15 or later.
+
+### Windows
+
+Download Zig from:
+
+https://ziglang.org/download/
+
+Extract the archive and add Zig to your `PATH`.
+
+Verify installation:
+
+```bash
+zig version
+```
+
+### macOS
+
+Using Homebrew:
+
+```bash
+brew install zig
+```
+
+Verify installation:
+
+```bash
+zig version
+```
+
+### Linux
+
+Download the latest release from:
+
+https://ziglang.org/download/
+
+Extract and add Zig to your `PATH`.
+
+Verify installation:
+
+```bash
+zig version
+```
+
+---
+
+## Clone the Repository
+
+```bash
+git clone https://github.com/taguniversal/mkrand.git
+cd mkrand
+```
+
+---
+
+## Build
+
+Compile the project:
+
+```bash
+zig build
+```
+
+The executable will be produced in:
+
+```text
+zig-out/bin/mkrand
+```
+
+---
+Copy it to a directory on your path in order for it to be available on the command-line or use zig to run it.
+
+## Run
+
+Generate a single 128-bit block in hexadecimal:
+
+```bash
+zig build run -- -n 1 -f hex
+```
+
+Generate five blocks:
+
+```bash
+zig build run -- -n 5 -f hex
+```
+
+Generate binary output:
+
+```bash
+zig build run -- -n 5 -f bin
+```
+
+Use a custom seed:
+
+```bash
+zig build run -- -n 10 -s 0x10000000000000000
+```
+
+---
+
+## Command Line Options
+
+| Option           | Description                          |
+| ---------------- | ------------------------------------ |
+| `-n`, `--blocks` | Number of 128-bit blocks to generate |
+| `-f`, `--format` | Output format (`hex` , `bin`, or 'psi')       |
+| `-s`, `--seed`   | Initial 128-bit seed (hexadecimal)   |
+| `-h`, `--help`   | Display usage information            |
+
+---
+
+## Examples
+
+Generate 10 hexadecimal blocks:
+
+```bash
+zig build run -- --blocks 10 --format hex
+```
+
+Generate 10 binary blocks:
+
+```bash
+zig build run -- --blocks 10 --format bin
+```
+
+Generate a deterministic sequence from a custom seed:
+
+```bash
+zig build run -- \
+    --blocks 20 \
+    --seed 0xdeadbeefcafebabe123456789abcdef0
+```
+
+---
+
+## Development
+
+Run the test suite:
+
+```bash
+zig build test
+```
+
+Format source code:
+
+```bash
+zig fmt .
+```
+
+---
+
+## Algorithm Overview
+
+```text
+Seed (128 bits)
+        │
+        ▼
+Rule 30 Cellular Automata
+(256 Generations, Wrapped Ring)
+        │
+        ▼
+Center Column Extraction
+(Drop First 128 Bits)
+        │
+        ▼
+SHA30 Output (128 bits)
+        │
+        ▼
+Current State XOR SHA30 Output
+        │
+        ▼
+Next State
+```

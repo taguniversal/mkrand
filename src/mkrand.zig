@@ -4,7 +4,7 @@ pub const Seg = u128;
 
 pub const Field = [256]Seg;
 
-pub const seed_unit: Seg =
+pub const seedUnit: Seg =
     @as(u128, 1) << 64;
 
 pub fn rule30(row: Seg) Seg {
@@ -84,33 +84,33 @@ pub fn next(state: Seg) Seg {
     return state ^ sha30(state);
 }
 
-test "seed_unit is center bit" {
-    try std.testing.expectEqual(@as(Seg, @as(u128, 1) << 64), seed_unit);
+test "seedUnit is center bit" {
+    try std.testing.expectEqual(@as(Seg, @as(u128, 1) << 64), seedUnit);
 }
 
 test "rule30 first evolution from seed_unit" {
-    const nextrule30 = rule30(seed_unit);
+    const nextrule30 = rule30(seedUnit);
     try std.testing.expectEqual(@as(Seg, 0x38000000000000000), nextrule30);
 }
 
 test "field first rows match direct rule30 evolution" {
-    const rows = field(seed_unit);
+    const rows = field(seedUnit);
 
-    try std.testing.expectEqual(seed_unit, rows[0]);
-    try std.testing.expectEqual(rule30(seed_unit), rows[1]);
+    try std.testing.expectEqual(seedUnit, rows[0]);
+    try std.testing.expectEqual(rule30(seedUnit), rows[1]);
     try std.testing.expectEqual(rule30(rows[1]), rows[2]);
     try std.testing.expectEqual(rule30(rows[2]), rows[3]);
 }
 
 test "sha30 is deterministic" {
-    const a = sha30(seed_unit);
-    const b = sha30(seed_unit);
+    const a = sha30(seedUnit);
+    const b = sha30(seedUnit);
 
     try std.testing.expectEqual(a, b);
 }
 
-test "sha30 produces nonzero output for seed_unit" {
-    try std.testing.expect(sha30(seed_unit) != 0);
+test "sha30 produces nonzero output for seedUnit" {
+    try std.testing.expect(sha30(seedUnit) != 0);
 }
 
 test "rule30 wraps at boundaries" {

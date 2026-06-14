@@ -272,13 +272,106 @@ Generate binary output:
 zig build run -- -n 5 -f bin
 ```
 
-Use a custom seed:
+Use a custom hexadecimal seed:
 
 ```bash
 zig build run -- -n 10 -s 0x10000000000000000
 ```
 
 ---
+
+Use a PSI block as a continuation seed:
+
+```bash
+zig build run -- -n 5 -s "[<:4aa0da9e7b0a5fd5985ab55c0f0192fe:>]"
+```
+
+This will continue the deterministic sequence from the supplied PSI block.
+
+---
+
+Use an arbitrary string as a deterministic seed:
+
+```bash
+zig build run -- -n 5 -s "blue"
+```
+
+Output:
+
+```text
+seed: 0x06b371ce0ec52fbe26456d0e972c3b9a
+0x677c09a5d6610026b0f807bd2e29ae8a
+0xd2ec8a622f5d1b3a369a0d86e856099d
+0x3e92d5a498acc85ca92a1259b8f0383e
+0x5d97d28e1a405efa8d3268a73752d132
+0x7dae35c4e51ae25089f9e04eaa3b88e5
+```
+
+The same string will always produce the same seed and output stream.
+
+```bash
+zig build run -- -n 5 -s "blue"
+```
+
+Different strings produce different deterministic streams:
+
+```bash
+zig build run -- -n 5 -s "red"
+```
+
+---
+
+Use your operating system's current time as a nondeterministic seed source.
+
+Windows PowerShell:
+
+```powershell
+mkrand -n 5 -s "$(Get-Date -Format o)"
+```
+
+Linux:
+
+```bash
+mkrand -n 5 -s "$(date --iso-8601=ns)"
+```
+
+macOS:
+
+```bash
+mkrand -n 5 -s "$(date '+%Y-%m-%dT%H:%M:%S.%N%z')"
+```
+
+This approach avoids platform-specific clock implementations inside MKRAND. Any external source of entropy can be supplied as a string and converted into a deterministic 128-bit seed.
+
+---
+
+Examples of alternative seed sources:
+
+```bash
+mkrand -s "hello world"
+mkrand -s "temperature=72.5"
+mkrand -s "Mars Mission 2035"
+mkrand -s "$(hostname)"
+mkrand -s "$(git rev-parse HEAD)"
+```
+
+MKRAND treats all seed material uniformly:
+
+```text
+Hexadecimal Seed
+        │
+PSI Block
+        │
+Arbitrary String
+        │
+Operating System Time
+        ▼
+    128-bit Seed
+        ▼
+      MKRAND
+        ▼
+Deterministic Stream
+```
 
 ## Command Line Options
 

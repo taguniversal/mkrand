@@ -28,56 +28,6 @@ fn defaultSeed() mkrand.Seg {
     return mkrand.seedUnit;
 }
 
-fn isHexChar(c: u8) bool {
-    return (c >= '0' and c <= '9') or
-        (c >= 'a' and c <= 'f') or
-        (c >= 'A' and c <= 'F');
-}
-
-fn isHexString(s: []const u8) bool {
-    if (s.len == 0) return false;
-
-    for (s) |c| {
-        if (!isHexChar(c)) return false;
-    }
-
-    return true;
-}
-
-fn seedFromString(s: []const u8) mkrand.Seg {
-    var state: mkrand.Seg = mkrand.seedUnit;
-
-    for (s) |byte| {
-        state ^= @as(mkrand.Seg, byte);
-        state = mkrand.next(state);
-    }
-
-    return state;
-}
-
-fn parseSeed(value: []const u8) !mkrand.Seg {
-    var s = value;
-
-    // PSI format: [<:HEX:>]
-    if (std.mem.startsWith(u8, s, "[<:") and std.mem.endsWith(u8, s, ":>]")) {
-        s = s[3 .. s.len - 3];
-        return try std.fmt.parseInt(mkrand.Seg, s, 16);
-    }
-
-    // Optional hex prefix
-    if (std.mem.startsWith(u8, s, "0x") or std.mem.startsWith(u8, s, "0X")) {
-        s = s[2..];
-        return try std.fmt.parseInt(mkrand.Seg, s, 16);
-    }
-
-    // Bare hex seed
-    if (s.len <= 32 and isHexString(s)) {
-        return try std.fmt.parseInt(mkrand.Seg, s, 16);
-    }
-
-    // Arbitrary string seed
-    return seedFromString(s);
-}
 
 fn parseArgs(args: []const []const u8) !Options {
     var opts = Options{};
@@ -100,7 +50,7 @@ fn parseArgs(args: []const []const u8) !Options {
         } else if (std.mem.eql(u8, arg, "--seed") or std.mem.eql(u8, arg, "-s")) {
             i += 1;
             if (i >= args.len) return error.MissingArgument;
-            opts.seed = try parseSeed(args[i]);
+            opts.seed = try mkrand.parseSeed(args[i]);
         } else {
             return error.UnknownArgument;
         }

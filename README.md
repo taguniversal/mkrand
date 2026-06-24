@@ -319,6 +319,14 @@ Different strings produce different deterministic streams:
 zig build run -- -n 5 -s "red"
 ```
 
+```text 
+seed: 0x6c37585f7bc0c000dea6f3f78f139642
+0x909f4c61feca802f178ea71eff0af584
+0x09fb381321f16056c64571bf507f64fa
+0x61f9e619e0026b2afb5c60087e704913
+0xca1a894976c772b81271eb691b76b586
+0xc1dbaeb4b2352e670f5afa683a561fed
+```
 ---
 
 Use your operating system's current time as a nondeterministic seed source.
@@ -379,7 +387,7 @@ Deterministic Stream
 | ---------------- | ------------------------------------ |
 | `-n`, `--blocks` | Number of 128-bit blocks to generate |
 | `-f`, `--format` | Output format (`hex` , `bin`, or `psi`)       |
-| `-s`, `--seed`   | Initial 128-bit seed (hexadecimal)   |
+| `-s`, `--seed`   | Initial 128-bit seed (PSI, hexadecimal or arbitrary string)   |
 | `-h`, `--help`   | Display usage information            |
 
 ---

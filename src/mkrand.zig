@@ -15,6 +15,45 @@ pub fn rule30(row: Seg) Seg {
     return left ^ (center | right);
 }
 
+fn isHexChar(c: u8) bool {
+    return (c >= '0' and c <= '9') or
+        (c >= 'a' and c <= 'f') or
+        (c >= 'A' and c <= 'F');
+}
+
+fn isHexString(s: []const u8) bool {
+    if (s.len == 0) return false;
+
+    for (s) |c| {
+        if (!isHexChar(c)) return false;
+    }
+
+    return true;
+}
+
+pub fn parseSeed(value: []const u8) !Seg {
+    var s = value;
+
+    // PSI format: [<:HEX:>]
+    if (std.mem.startsWith(u8, s, "[<:") and std.mem.endsWith(u8, s, ":>]")) {
+        s = s[3 .. s.len - 3];
+        return try std.fmt.parseInt(Seg, s, 16);
+    }
+
+    // Optional hex prefix
+    if (std.mem.startsWith(u8, s, "0x") or std.mem.startsWith(u8, s, "0X")) {
+        s = s[2..];
+        return try std.fmt.parseInt(Seg, s, 16);
+    }
+
+    // Bare hex seed
+    if (s.len <= 32 and isHexString(s)) {
+        return try std.fmt.parseInt(Seg, s, 16);
+    }
+
+    // Arbitrary string seed
+    return seedFromString(s);
+}
 
 pub fn printSeg(writer: anytype, seg: Seg) !void {
     var bit: u7 = 127;
@@ -80,6 +119,17 @@ pub fn sha30(seed: Seg) Seg {
     return out;
 }
 
+pub fn seedFromString(s: []const u8) Seg {
+    var state: Seg = seedUnit;
+
+    for (s) |byte| {
+        state ^= @as(Seg, byte);
+        state = next(state);
+    }
+
+    return state;
+}
+
 pub fn next(state: Seg) Seg {
     return state ^ sha30(state);
 }
@@ -118,4 +168,60 @@ test "rule30 wraps at boundaries" {
     const next_row = rule30(edge);
 
     try std.testing.expect(next_row != 0);
+}
+
+test "parseSeed accepts hex prefix" {
+    try std.testing.expectEqual(@as(Seg, 0x1234), try parseSeed("0x1234"));
+    try std.testing.expectEqual(@as(Seg, 0x1234), try parseSeed("0X1234"));
+}
+
+test "parseSeed accepts psi format" {
+    try std.testing.expectEqual(@as(Seg, 0x1234), try parseSeed("[<:1234:>]"));
+}
+
+test "parseSeed accepts bare hex" {
+    try std.testing.expectEqual(@as(Seg, 0x1234), try parseSeed("1234"));
+}
+
+test "parseSeed falls back to string seed" {
+    const a = try parseSeed("fuzz");
+    const b = seedFromString("fuzz");
+
+    try std.testing.expectEqual(a, b);
+}
+
+test "seedFromString is deterministic" {
+    try std.testing.expectEqual(seedFromString("fuzz"), seedFromString("fuzz"));
+}
+
+test "different string seeds produce different seeds" {
+    try std.testing.expect(seedFromString("fuzz") != seedFromString("storm"));
+}
+
+test "next is deterministic" {
+    const a = next(seedUnit);
+    const b = next(seedUnit);
+
+    try std.testing.expectEqual(a, b);
+}
+
+test "next advances from seedUnit" {
+    try std.testing.expect(next(seedUnit) != seedUnit);
+}
+
+test "getBit reads expected bits" {
+    const seg: Seg = 0b1010;
+
+    try std.testing.expectEqual(@as(u1, 0), getBit(seg, 0));
+    try std.testing.expectEqual(@as(u1, 1), getBit(seg, 1));
+    try std.testing.expectEqual(@as(u1, 0), getBit(seg, 2));
+    try std.testing.expectEqual(@as(u1, 1), getBit(seg, 3));
+}
+
+test "parseSeed rejects invalid prefixed hex" {
+    try std.testing.expectError(error.InvalidCharacter, parseSeed("0xzz"));
+}
+
+test "parseSeed rejects invalid psi hex" {
+    try std.testing.expectError(error.InvalidCharacter, parseSeed("[<:zz:>]"));
 }
